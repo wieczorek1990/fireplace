@@ -10,6 +10,6 @@ set(CMAKE_OBJCXX_EXTENSIONS OFF)
 
 find_library(APPKIT_FRAMEWORK AppKit REQUIRED)
 
-add_executable(fireplace main.cpp window.mm)
+add_executable(fireplace main.cpp scene.cpp window.mm)
 target_compile_options(fireplace PRIVATE $<$<COMPILE_LANGUAGE:OBJCXX>:-fobjc-arc>)
 target_link_libraries(fireplace PRIVATE "${APPKIT_FRAMEWORK}")

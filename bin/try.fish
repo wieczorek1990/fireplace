@@ -2,6 +2,6 @@
 
 set -l script_dir (path resolve (path dirname (status filename)))
 
-"$script_dir/build.sh"
+"$script_dir/build.fish"
 or exit $status
-exec "$script_dir/run.sh" $argv
+exec "$script_dir/run.fish" $argv
