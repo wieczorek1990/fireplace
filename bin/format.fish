@@ -23,16 +23,17 @@ end
 
 # Keep generated files and third-party sources out of the formatter.
 set -l sources (path filter -f "$project_dir"/*.{cpp,h,mm})
+set -l scripts (path filter -f "$project_dir"/bin/**.fish)
 set -l failed 0
 if test "$mode" = check
     clang-format --dry-run --Werror $sources
     or set failed 1
-    fish_indent --check "$project_dir"/bin/*.fish
+    fish_indent --check $scripts
     or set failed 1
 else
     clang-format -i $sources
     or set failed 1
-    fish_indent --write "$project_dir"/bin/*.fish
+    fish_indent --write $scripts
     or set failed 1
 end
 exit $failed

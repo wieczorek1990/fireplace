@@ -20,7 +20,7 @@ git diff --cached --check
 or set failed 1
 
 echo "Checking fish syntax..."
-for script in bin/*.fish
+for script in bin/**.fish
     fish --no-execute "$script"
     or set failed 1
 end
