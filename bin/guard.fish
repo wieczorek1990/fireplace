@@ -25,9 +25,8 @@ for script in bin/*.fish
     or set failed 1
 end
 
-echo "Checking C++ and Objective-C++ formatting..."
-# Only application sources; exclude the LLVM checkout and generated files.
-clang-format --dry-run --Werror main.cpp scene.cpp scene.h fire.cpp fire.h window.h window.mm
+echo "Checking source and script formatting..."
+"$project_dir/bin/format.fish" --check
 or set failed 1
 
 echo "Building Release in a temporary directory..."
