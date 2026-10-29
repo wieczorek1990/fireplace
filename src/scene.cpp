@@ -58,6 +58,9 @@ std::array<Face, 48> log_faces(double yaw, double pitch,
     };
     for (int side = 0; side < sides; ++side) {
       auto &result = projected[log * sides + side];
+      // Logs disappear in sequence as the last fuel burns away.
+      const double threshold = 0.02 * (logCount - 1 - log);
+      result.face.opacity = std::clamp((fuel - threshold) / 0.04, 0.0, 1.0);
       const std::array<Vector, 4> corners{
           vertex(false, side), vertex(false, side + 1), vertex(true, side + 1),
           vertex(true, side)};

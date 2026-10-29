@@ -209,15 +209,15 @@ std::size_t innerFace(const std::array<fireplace::Face, 48> &faces,
   std::array<std::size_t, 48> inner{};
   std::size_t count = 0;
   for (std::size_t i = 0; i < faces.size(); ++i)
-    if (faces[i].faces_fire)
+    if (faces[i].faces_fire && faces[i].opacity > 0.01)
       inner[count++] = i;
   return count ? inner[(seed * 17) % count] : seed % faces.size();
 }
 
 template <typename Particle, std::size_t N>
 void attachFlames(std::array<Particle, N> &particles,
-                  const std::array<fireplace::Face, 48> &faces, double time,
-                  double remaining) {
+                  const std::array<fireplace::Face, 48> &faces,
+                  double intensity) {
   for (std::size_t i = 0; i < N; ++i) {
     auto &flame = particles[i];
     const auto faceIndex = innerFace(faces, i);
@@ -226,11 +226,9 @@ void attachFlames(std::array<Particle, N> &particles,
     flame.base.x += source.x - flame.source.x;
     flame.base.y += source.y - flame.source.y;
     const double center = faces[faceIndex].fire_center_strength;
-    flame.height *= 0.55 + 0.65 * center;
+    flame.height *= (0.55 + 0.65 * center) * std::sqrt(intensity);
     flame.width *= 0.75 + 0.25 * center;
     flame.opacity *= 0.35 + 0.65 * center;
-    if (remaining <= 0)
-      flame.opacity = 0;
   }
 }
 
@@ -262,15 +260,15 @@ void drawEmbers(double time, bool behind, double cx, double cy, double scale,
 }
 
 void drawFire(double time, bool behind, double cx, double cy, double scale,
-              double remaining, const std::array<fireplace::Face, 48> &faces) {
+              double intensity, const std::array<fireplace::Face, 48> &faces) {
   auto bed = fireplace::flame_bed(time);
   auto wisps = fireplace::rising_wisps(time);
-  attachFlames(bed, faces, time, remaining);
-  attachFlames(wisps, faces, time, remaining);
+  attachFlames(bed, faces, intensity);
+  attachFlames(wisps, faces, intensity);
   drawFlames(std::span<const fireplace::BedFlame>(bed), behind, cx, cy, scale);
   drawFlames(std::span<const fireplace::RisingWisp>(wisps), behind, cx, cy,
              scale);
-  drawEmbers(time, behind, cx, cy, scale, remaining, faces);
+  drawEmbers(time, behind, cx, cy, scale, intensity, faces);
 }
 
 } // namespace
@@ -455,11 +453,15 @@ void drawFire(double time, bool behind, double cx, double cy, double scale,
                     std::clamp(0.3 + combustion.soot * 30.0, 0.0, 1.0));
   drawSmoke(time, cx, fireCy, fireScale);
   [NSGraphicsContext restoreGraphicsState];
-  drawFire(time, true, cx, fireCy, fireScale, remaining, faces);
+  drawFire(time, true, cx, fireCy, fireScale, fireIntensity, faces);
   [NSGraphicsContext restoreGraphicsState];
   if (remaining > 0) {
     [NSGraphicsContext saveGraphicsState];
     for (const auto &face : faces) {
+      if (face.opacity <= 0)
+        continue;
+      [NSGraphicsContext saveGraphicsState];
+      CGContextSetAlpha(NSGraphicsContext.currentContext.CGContext, face.opacity);
       NSBezierPath *path = [NSBezierPath bezierPath];
       const auto first = face.points.front();
       [path moveToPoint:NSMakePoint(cx + first.x * fireScale,
@@ -516,12 +518,13 @@ void drawFire(double time, bool behind, double cx, double cy, double scale,
                                                           alpha:0]];
       [firelight drawInBezierPath:path angle:90];
       [NSGraphicsContext restoreGraphicsState];
+      [NSGraphicsContext restoreGraphicsState];
     }
     [NSGraphicsContext restoreGraphicsState];
   }
   [NSGraphicsContext saveGraphicsState];
   CGContextSetAlpha(NSGraphicsContext.currentContext.CGContext, fireIntensity);
-  drawFire(time, false, cx, fireCy, fireScale, remaining, faces);
+  drawFire(time, false, cx, fireCy, fireScale, fireIntensity, faces);
   [NSGraphicsContext restoreGraphicsState];
   drawStones(true, cx, cy, scale, firelight, yaw, pitch);
 }

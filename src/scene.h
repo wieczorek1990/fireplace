@@ -12,6 +12,7 @@ struct Point {
 struct Face {
   std::array<Point, 4> points;
   Color color;
+  double opacity;
   double fire_light;
   double fire_center_strength;
   bool faces_fire;
