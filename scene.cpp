@@ -17,57 +17,46 @@ Vector rotate(Vector p, double yaw, double pitch) {
 }
 } // namespace
 
-std::array<Face, 6> cube_faces(double yaw, double pitch) {
-  constexpr std::array<Vector, 8> vertices{{
-      {-0.6, -0.6, -0.6},
-      {0.6, -0.6, -0.6},
-      {0.6, 0.6, -0.6},
-      {-0.6, 0.6, -0.6},
-      {-0.6, -0.6, 0.6},
-      {0.6, -0.6, 0.6},
-      {0.6, 0.6, 0.6},
-      {-0.6, 0.6, 0.6},
-  }};
-  constexpr std::array<std::array<int, 4>, 6> indices{{
-      {0, 3, 2, 1},
-      {4, 5, 6, 7},
-      {0, 4, 7, 3},
-      {1, 2, 6, 5},
-      {0, 1, 5, 4},
-      {3, 7, 6, 2},
-  }};
-  constexpr std::array<Vector, 6> normals{{
-      {0, 0, -1},
-      {0, 0, 1},
-      {-1, 0, 0},
-      {1, 0, 0},
-      {0, -1, 0},
-      {0, 1, 0},
-  }};
-  struct ProjectedFace {
-    Face face;
-    double depth;
-  };
-  std::array<ProjectedFace, 6> projected{};
-  for (std::size_t i = 0; i < indices.size(); ++i) {
-    auto &result = projected[i];
-    for (std::size_t j = 0; j < 4; ++j) {
-      const auto point = rotate(vertices[indices[i][j]], yaw, pitch);
-      result.face.points[j] = {point.x, point.y};
-      result.depth += point.z / 4;
+std::array<Face, 48> log_faces(double yaw, double pitch) {
+  constexpr int logCount = 8;
+  constexpr int sides = 6;
+  constexpr double pi = 3.141592653589793;
+  struct ProjectedFace { Face face; double depth; };
+  std::array<ProjectedFace, logCount * sides> projected{};
+  for (int log = 0; log < logCount; ++log) {
+    const double angle = 2 * pi * log / logCount;
+    const Vector bottom{0.67 * std::cos(angle), -0.8, 0.67 * std::sin(angle)};
+    const Vector top{0.12 * std::cos(angle), 0.82, 0.12 * std::sin(angle)};
+    // A radial vector and a perpendicular vector span each log's cross section.
+    const Vector radial{std::cos(angle) * 0.947, 0.321, std::sin(angle) * 0.947};
+    const Vector tangent{-std::sin(angle), 0, std::cos(angle)};
+    auto vertex = [&](bool upper, int side) {
+      const double theta = 2 * pi * side / sides;
+      const Vector center = upper ? top : bottom;
+      return Vector{center.x + 0.16 * (radial.x * std::cos(theta) + tangent.x * std::sin(theta)),
+                    center.y + 0.16 * radial.y * std::cos(theta),
+                    center.z + 0.16 * (radial.z * std::cos(theta) + tangent.z * std::sin(theta))};
+    };
+    for (int side = 0; side < sides; ++side) {
+      auto &result = projected[log * sides + side];
+      const std::array<Vector, 4> corners{vertex(false, side), vertex(false, side + 1),
+                                           vertex(true, side + 1), vertex(true, side)};
+      for (int j = 0; j < 4; ++j) {
+        const auto point = rotate(corners[j], yaw, pitch);
+        result.face.points[j] = {point.x, point.y};
+        result.depth += point.z / 4;
+      }
+      const double theta = 2 * pi * (side + 0.5) / sides;
+      const auto normal = rotate({radial.x * std::cos(theta) + tangent.x * std::sin(theta),
+                                  radial.y * std::cos(theta),
+                                  radial.z * std::cos(theta) + tangent.z * std::sin(theta)}, yaw, pitch);
+      const double light = 0.55 + 0.45 * std::max(0.0, -normal.x * 0.4 + normal.y * 0.8 + normal.z * 0.4472135955);
+      result.face.color = {0.72 * light, 0.43 * light, 0.21 * light};
     }
-    const auto normal = rotate(normals[i], yaw, pitch);
-    // Fixed light above and to the left of the viewer.
-    const double light =
-        0.55 + 0.45 * std::max(0.0, -normal.x * 0.4 + normal.y * 0.8 +
-                                        normal.z * 0.4472135955);
-    result.face.color = {0.72 * light, 0.43 * light, 0.21 * light};
   }
   std::ranges::sort(projected, {}, &ProjectedFace::depth);
-  std::array<Face, 6> faces{};
-  for (std::size_t i = 0; i < faces.size(); ++i) {
-    faces[i] = projected[i].face;
-  }
+  std::array<Face, logCount * sides> faces{};
+  for (std::size_t i = 0; i < faces.size(); ++i) faces[i] = projected[i].face;
   return faces;
 }
 

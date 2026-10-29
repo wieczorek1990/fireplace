@@ -16,7 +16,7 @@ struct Face {
 };
 
 // Orthographic projection, sorted from farthest to nearest face.
-std::array<Face, 6> cube_faces(double yaw, double pitch);
+std::array<Face, 48> log_faces(double yaw, double pitch);
 
 using GrainLine = std::array<Point, 25>;
 std::array<GrainLine, 12> wood_grain(const Face &face);
