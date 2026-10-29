@@ -22,7 +22,7 @@ for tool in clang-format fish_indent
 end
 
 # Keep generated files and third-party sources out of the formatter.
-set -l sources (path filter -f "$project_dir"/*.{cpp,h,mm})
+set -l sources (path filter -f "$project_dir"/src/*.{cpp,h,mm})
 set -l scripts (path filter -f "$project_dir"/bin/**.fish)
 set -l failed 0
 if test "$mode" = check
