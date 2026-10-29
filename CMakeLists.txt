@@ -9,14 +9,16 @@ set(CMAKE_OBJCXX_STANDARD_REQUIRED ON)
 set(CMAKE_OBJCXX_EXTENSIONS OFF)
 
 find_library(APPKIT_FRAMEWORK AppKit REQUIRED)
+find_library(METAL_FRAMEWORK Metal REQUIRED)
 
 add_executable(fireplace
     src/main.cpp
     src/scene.cpp
     src/light_shader.cpp
+    src/metal_lighting.mm
     src/fire.cpp
     src/combustion.cpp
     src/wood_physics.cpp
     src/window.mm)
 target_compile_options(fireplace PRIVATE $<$<COMPILE_LANGUAGE:OBJCXX>:-fobjc-arc>)
-target_link_libraries(fireplace PRIVATE "${APPKIT_FRAMEWORK}")
+target_link_libraries(fireplace PRIVATE "${APPKIT_FRAMEWORK}" "${METAL_FRAMEWORK}")

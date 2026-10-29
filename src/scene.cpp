@@ -28,6 +28,7 @@ std::array<Face, 48> log_faces(double yaw, double pitch,
     double depth;
   };
   std::array<ProjectedFace, logCount * sides> projected{};
+  std::array<LightInput, logCount * sides> lightInputs{};
   for (int log = 0; log < logCount; ++log) {
     const double angle = 2 * pi * log / logCount;
     const auto &ends = logs[log].ends;
@@ -81,14 +82,21 @@ std::array<Face, 48> log_faces(double yaw, double pitch,
       const double radialDistance = std::hypot(center.x, center.z);
       result.face.fire_center_strength =
           std::exp(-2.5 * radialDistance * radialDistance);
-      const auto shaded =
-          shade_wood({0.72, 0.43, 0.21}, {center.x, center.y, center.z},
-                     {worldNormal.x, worldNormal.y, worldNormal.z},
-                     {normal.x, normal.y, normal.z}, fuel, fire_intensity);
-      result.face.faces_fire = shaded.facing > 0.2;
-      result.face.fire_light = shaded.fire_light;
-      result.face.color = shaded.color;
+      lightInputs[log * sides + side] = {
+          static_cast<float>(center.x),      static_cast<float>(center.y),
+          static_cast<float>(center.z),      static_cast<float>(worldNormal.x),
+          static_cast<float>(worldNormal.y), static_cast<float>(worldNormal.z),
+          static_cast<float>(normal.x),      static_cast<float>(normal.y),
+          static_cast<float>(normal.z),      static_cast<float>(fuel),
+          static_cast<float>(fire_intensity)};
     }
+  }
+  std::array<ShadedLight, logCount * sides> lighting{};
+  shade_wood_batch(lightInputs.data(), lighting.data(), lighting.size());
+  for (std::size_t i = 0; i < projected.size(); ++i) {
+    projected[i].face.faces_fire = lighting[i].facing > 0.2;
+    projected[i].face.fire_light = lighting[i].fire_light;
+    projected[i].face.color = lighting[i].color;
   }
   std::ranges::sort(projected, {}, &ProjectedFace::depth);
   std::array<Face, logCount * sides> faces{};

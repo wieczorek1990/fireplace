@@ -1,7 +1,7 @@
 #!/usr/bin/env fish
 
 set -l project_dir (path resolve (path dirname (status filename))/..)
-set -l executable "$project_dir/cmake-build-debug/fireplace"
+set -l executable "$project_dir/cmake-build-cli/fireplace"
 
 if not test -x "$executable"
     echo "Fireplace has not been built. Run $project_dir/bin/build.fish first." >&2
