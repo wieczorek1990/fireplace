@@ -6,6 +6,7 @@ namespace fireplace {
 
 struct Flame {
   Point base;
+  Point source;
   double width, height, lean, opacity;
   bool behind;
 };
@@ -17,6 +18,7 @@ std::array<RisingWisp, 172> rising_wisps(double time);
 
 struct Ember {
   Point position;
+  Point source;
   double opacity, radius;
   bool behind;
 };

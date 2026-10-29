@@ -34,6 +34,7 @@ std::array<BedFlame, 48> flame_bed(double time) {
                          0.25 * std::sin(time * 11.1 + seed * 1.7);
     static_cast<Flame &>(flames[i]) = {
         {0.96 * std::cos(angle), -0.83 + 0.30 * std::sin(angle)},
+        {0.96 * std::cos(angle), -0.83 + 0.30 * std::sin(angle)},
         0.075 + pulse * 0.045,
         0.25 + pulse * 0.55,
         0.08 * std::sin(time * 4.3 + seed) + wind(time) * (0.25 + pulse * 0.35),
@@ -58,6 +59,7 @@ std::array<RisingWisp, 172> rising_wisps(double time) {
     static_cast<Flame &>(flames[i]) = {
         {0.96 * std::cos(angle) + sway + wind_distance(time, age / speed) * 0.8,
          -0.83 + 0.30 * std::sin(angle) + age * (0.85 + variation * 0.65)},
+        {0.96 * std::cos(angle), -0.83 + 0.30 * std::sin(angle)},
         (0.055 + noise(seed + 4) * 0.065) * (1 - age * 0.75),
         (0.24 + variation * 0.42) * (1 - age * 0.5),
         0.10 * std::sin(time * 4 + seed) + sway + wind(time) * (0.2 + age * 0.25),
@@ -78,6 +80,7 @@ std::array<Ember, 45> fire_embers(double time) {
         {0.9 * std::cos(angle) + age * 0.25 * std::sin(time * 1.5 + seed) +
              wind_distance(time, age / speed) * 0.65,
          -0.8 + 0.3 * std::sin(angle) + age * 2.8},
+        {0.9 * std::cos(angle), -0.8 + 0.3 * std::sin(angle)},
         std::sin(age * 3.14159265359) * (1 - age),
         0.003 + noise(seed + 2) * 0.005,
         std::sin(angle) > 0};

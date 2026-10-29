@@ -10,6 +10,6 @@ set(CMAKE_OBJCXX_EXTENSIONS OFF)
 
 find_library(APPKIT_FRAMEWORK AppKit REQUIRED)
 
-add_executable(fireplace main.cpp scene.cpp fire.cpp window.mm)
+add_executable(fireplace main.cpp scene.cpp light_shader.cpp fire.cpp combustion.cpp wood_physics.cpp window.mm)
 target_compile_options(fireplace PRIVATE $<$<COMPILE_LANGUAGE:OBJCXX>:-fobjc-arc>)
 target_link_libraries(fireplace PRIVATE "${APPKIT_FRAMEWORK}")

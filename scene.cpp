@@ -17,7 +17,9 @@ Vector rotate(Vector p, double yaw, double pitch) {
 }
 } // namespace
 
-std::array<Face, 48> log_faces(double yaw, double pitch) {
+std::array<Face, 48> log_faces(double yaw, double pitch,
+                               const std::array<WoodLog, 8> &logs, double fuel,
+                               double fire_intensity) {
   constexpr int logCount = 8;
   constexpr int sides = 6;
   constexpr double pi = 3.141592653589793;
@@ -25,11 +27,19 @@ std::array<Face, 48> log_faces(double yaw, double pitch) {
   std::array<ProjectedFace, logCount * sides> projected{};
   for (int log = 0; log < logCount; ++log) {
     const double angle = 2 * pi * log / logCount;
-    const Vector bottom{0.67 * std::cos(angle), -0.8, 0.67 * std::sin(angle)};
-    const Vector top{0.12 * std::cos(angle), 0.82, 0.12 * std::sin(angle)};
-    // A radial vector and a perpendicular vector span each log's cross section.
-    const Vector radial{std::cos(angle) * 0.947, 0.321, std::sin(angle) * 0.947};
+    const auto &ends = logs[log].ends;
+    const Vector bottom{ends[0].x, ends[0].y, ends[0].z};
+    // The physics endpoints already shorten as the wood burns.
+    const Vector top{ends[1].x, ends[1].y, ends[1].z};
+    const double dx = top.x - bottom.x, dy = top.y - bottom.y, dz = top.z - bottom.z;
+    const double length = std::max(1e-9, std::sqrt(dx*dx + dy*dy + dz*dz));
+    // Use the original tangential direction to build a rotating cross-section.
     const Vector tangent{-std::sin(angle), 0, std::cos(angle)};
+    Vector radial{dy * tangent.z / length,
+                  (dz * tangent.x - dx * tangent.z) / length,
+                  -dy * tangent.x / length};
+    const double r = std::max(1e-9, std::sqrt(radial.x*radial.x + radial.y*radial.y + radial.z*radial.z));
+    radial = {radial.x/r, radial.y/r, radial.z/r};
     auto vertex = [&](bool upper, int side) {
       const double theta = 2 * pi * side / sides;
       const Vector center = upper ? top : bottom;
@@ -47,11 +57,25 @@ std::array<Face, 48> log_faces(double yaw, double pitch) {
         result.depth += point.z / 4;
       }
       const double theta = 2 * pi * (side + 0.5) / sides;
-      const auto normal = rotate({radial.x * std::cos(theta) + tangent.x * std::sin(theta),
-                                  radial.y * std::cos(theta),
-                                  radial.z * std::cos(theta) + tangent.z * std::sin(theta)}, yaw, pitch);
-      const double light = 0.55 + 0.45 * std::max(0.0, -normal.x * 0.4 + normal.y * 0.8 + normal.z * 0.4472135955);
-      result.face.color = {0.72 * light, 0.43 * light, 0.21 * light};
+      const Vector worldNormal{radial.x * std::cos(theta) + tangent.x * std::sin(theta),
+                               radial.y * std::cos(theta),
+                               radial.z * std::cos(theta) + tangent.z * std::sin(theta)};
+      const auto normal = rotate(worldNormal, yaw, pitch);
+      Vector center{};
+      for (const auto &corner : corners) {
+        center.x += corner.x * 0.25;
+        center.y += corner.y * 0.25;
+        center.z += corner.z * 0.25;
+      }
+      const double radialDistance = std::hypot(center.x, center.z);
+      result.face.fire_center_strength = std::exp(-2.5 * radialDistance * radialDistance);
+      const auto shaded = shade_wood({0.72, 0.43, 0.21},
+          {center.x, center.y, center.z},
+          {worldNormal.x, worldNormal.y, worldNormal.z},
+          {normal.x, normal.y, normal.z}, fuel, fire_intensity);
+      result.face.faces_fire = shaded.facing > 0.2;
+      result.face.fire_light = shaded.fire_light;
+      result.face.color = shaded.color;
     }
   }
   std::ranges::sort(projected, {}, &ProjectedFace::depth);
