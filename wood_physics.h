@@ -2,7 +2,9 @@
 #include <array>
 
 namespace fireplace {
-struct WoodPoint { double x, y, z; };
+struct WoodPoint {
+  double x, y, z;
+};
 struct WoodLog {
   std::array<WoodPoint, 2> ends{};
   std::array<WoodPoint, 2> previous{};

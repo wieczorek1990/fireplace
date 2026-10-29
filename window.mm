@@ -1,10 +1,10 @@
 #import <AppKit/AppKit.h>
 
-#include "fire.h"
 #include "combustion.h"
-#include "wood_physics.h"
+#include "fire.h"
 #include "scene.h"
 #include "window.h"
+#include "wood_physics.h"
 #include <span>
 
 #include <algorithm>
@@ -44,9 +44,12 @@ void drawStones(bool front, double cx, double cy, double scale, double light,
   constexpr double pi = 3.141592653589793;
   for (int i = 0; i < count; ++i) {
     const double angle = 2 * pi * i / count;
-    const double depth = -std::cos(angle) * std::sin(yaw) + std::sin(angle) * std::cos(yaw);
-    if ((depth > 0) != front) continue;
-    const auto position = groundPoint(1.12 * std::cos(angle), 1.12 * std::sin(angle), yaw, pitch);
+    const double depth =
+        -std::cos(angle) * std::sin(yaw) + std::sin(angle) * std::cos(yaw);
+    if ((depth > 0) != front)
+      continue;
+    const auto position =
+        groundPoint(1.12 * std::cos(angle), 1.12 * std::sin(angle), yaw, pitch);
     const double x = cx + position.x * scale;
     const double y = cy + position.y * scale;
     const double width = scale * (0.19 + 0.025 * std::sin(i * 3.1));
@@ -68,15 +71,22 @@ void drawStones(bool front, double cx, double cy, double scale, double light,
     [stone closePath];
     const double shade = 0.34 + 0.055 * std::sin(i * 4.3);
     NSGradient *gradient = [[NSGradient alloc]
-        initWithStartingColor:[NSColor colorWithCalibratedWhite:shade + 0.16 alpha:1]
-                  endingColor:[NSColor colorWithCalibratedWhite:shade - 0.09 alpha:1]];
+        initWithStartingColor:[NSColor colorWithCalibratedWhite:shade + 0.16
+                                                          alpha:1]
+                  endingColor:[NSColor colorWithCalibratedWhite:shade - 0.09
+                                                          alpha:1]];
     [gradient drawInBezierPath:stone angle:90];
     [NSGraphicsContext saveGraphicsState];
     [stone addClip];
     NSGradient *reflected = [[NSGradient alloc]
-        initWithStartingColor:[NSColor colorWithCalibratedRed:1 green:0.32 blue:0.06
+        initWithStartingColor:[NSColor colorWithCalibratedRed:1
+                                                        green:0.32
+                                                         blue:0.06
                                                         alpha:light * 0.42]
-                  endingColor:[NSColor colorWithCalibratedRed:1 green:0.22 blue:0.02 alpha:0]];
+                  endingColor:[NSColor colorWithCalibratedRed:1
+                                                        green:0.22
+                                                         blue:0.02
+                                                        alpha:0]];
     [reflected drawInBezierPath:stone angle:(x < cx ? 0 : 180)];
     [NSGraphicsContext restoreGraphicsState];
     [[NSColor colorWithCalibratedWhite:0.19 alpha:0.9] setStroke];
@@ -85,27 +95,34 @@ void drawStones(bool front, double cx, double cy, double scale, double light,
   }
 }
 
-void drawCoals(double time, double cx, double cy, double scale,
-               double amount, double heat, double yaw, double pitch) {
+void drawCoals(double time, double cx, double cy, double scale, double amount,
+               double heat, double yaw, double pitch) {
   constexpr int count = 32;
   const double coverage = std::clamp(amount * 12.0, 0.0, 1.0);
   for (int i = 0; i < count; ++i) {
-    if (i >= coverage * count) break;
+    if (i >= coverage * count)
+      break;
     const double angle = i * 2.3999632297;
     const double radius = std::sqrt((i + 0.5) / count);
-    const auto position = groundPoint(0.75 * radius * std::cos(angle),
-                                      0.75 * radius * std::sin(angle), yaw, pitch);
+    const auto position =
+        groundPoint(0.75 * radius * std::cos(angle),
+                    0.75 * radius * std::sin(angle), yaw, pitch);
     const double x = cx + scale * position.x;
     const double y = cy + scale * position.y;
-    const double size = scale * (0.045 + 0.018 * (0.5 + 0.5 * std::sin(i * 7.2)));
-    const double glow = std::clamp(heat * (0.8 + 0.2 * std::sin(time * 2.5 + i)), 0.0, 1.0);
-    NSBezierPath *coal = [NSBezierPath bezierPathWithOvalInRect:
-        NSMakeRect(x - size, y - size * 0.55, size * 2, size * 1.1)];
+    const double size =
+        scale * (0.045 + 0.018 * (0.5 + 0.5 * std::sin(i * 7.2)));
+    const double glow =
+        std::clamp(heat * (0.8 + 0.2 * std::sin(time * 2.5 + i)), 0.0, 1.0);
+    NSBezierPath *coal = [NSBezierPath
+        bezierPathWithOvalInRect:NSMakeRect(x - size, y - size * 0.55, size * 2,
+                                            size * 1.1)];
     [[NSColor colorWithCalibratedRed:0.12 + glow * 0.65
                                green:0.045 + glow * 0.2
-                                blue:0.025 + glow * 0.025 alpha:1] setFill];
+                                blue:0.025 + glow * 0.025
+                               alpha:1] setFill];
     [coal fill];
-    [[NSColor colorWithCalibratedRed:1 green:0.35 blue:0.04 alpha:glow * 0.7] setStroke];
+    [[NSColor colorWithCalibratedRed:1 green:0.35 blue:0.04
+                               alpha:glow * 0.7] setStroke];
     [coal setLineWidth:std::max(0.5, scale * 0.006)];
     [coal stroke];
   }
@@ -181,8 +198,10 @@ fireplace::Point woodSource(const fireplace::Face &face, std::size_t index) {
   const double u = 0.2 + 0.6 * ((index * 37 % 97) / 96.0);
   const double v = 0.08 + 0.84 * ((index * 53 % 101) / 100.0);
   const auto &p = face.points;
-  return {(1-u)*(1-v)*p[0].x + u*(1-v)*p[1].x + u*v*p[2].x + (1-u)*v*p[3].x,
-          (1-u)*(1-v)*p[0].y + u*(1-v)*p[1].y + u*v*p[2].y + (1-u)*v*p[3].y};
+  return {(1 - u) * (1 - v) * p[0].x + u * (1 - v) * p[1].x + u * v * p[2].x +
+              (1 - u) * v * p[3].x,
+          (1 - u) * (1 - v) * p[0].y + u * (1 - v) * p[1].y + u * v * p[2].y +
+              (1 - u) * v * p[3].y};
 }
 
 std::size_t innerFace(const std::array<fireplace::Face, 48> &faces,
@@ -190,14 +209,15 @@ std::size_t innerFace(const std::array<fireplace::Face, 48> &faces,
   std::array<std::size_t, 48> inner{};
   std::size_t count = 0;
   for (std::size_t i = 0; i < faces.size(); ++i)
-    if (faces[i].faces_fire) inner[count++] = i;
+    if (faces[i].faces_fire)
+      inner[count++] = i;
   return count ? inner[(seed * 17) % count] : seed % faces.size();
 }
 
 template <typename Particle, std::size_t N>
 void attachFlames(std::array<Particle, N> &particles,
-                  const std::array<fireplace::Face, 48> &faces,
-                  double time, double remaining) {
+                  const std::array<fireplace::Face, 48> &faces, double time,
+                  double remaining) {
   for (std::size_t i = 0; i < N; ++i) {
     auto &flame = particles[i];
     const auto faceIndex = innerFace(faces, i);
@@ -209,12 +229,14 @@ void attachFlames(std::array<Particle, N> &particles,
     flame.height *= 0.55 + 0.65 * center;
     flame.width *= 0.75 + 0.25 * center;
     flame.opacity *= 0.35 + 0.65 * center;
-    if (remaining <= 0) flame.opacity = 0;
+    if (remaining <= 0)
+      flame.opacity = 0;
   }
 }
 
 void drawEmbers(double time, bool behind, double cx, double cy, double scale,
-                double remaining, const std::array<fireplace::Face, 48> &faces) {
+                double remaining,
+                const std::array<fireplace::Face, 48> &faces) {
   [NSGraphicsContext saveGraphicsState];
   [[NSGraphicsContext currentContext]
       setCompositingOperation:NSCompositingOperationPlusLighter];
@@ -223,14 +245,18 @@ void drawEmbers(double time, bool behind, double cx, double cy, double scale,
     auto &ember = embers[i];
     const auto faceIndex = innerFace(faces, i);
     const auto source = woodSource(faces[faceIndex], i);
-    if ((faceIndex < faces.size() / 2) != behind || remaining <= 0) continue;
+    if ((faceIndex < faces.size() / 2) != behind || remaining <= 0)
+      continue;
     ember.position.x += source.x - ember.source.x;
     ember.position.y += source.y - ember.source.y;
     const double radius = std::max(0.5, ember.radius * scale);
-    [[NSColor colorWithCalibratedRed:1 green:0.6 blue:0.15 alpha:ember.opacity] setFill];
-    [[NSBezierPath bezierPathWithOvalInRect:NSMakeRect(
-        cx + ember.position.x * scale - radius, cy + ember.position.y * scale - radius,
-        radius * 2, radius * 3)] fill];
+    [[NSColor colorWithCalibratedRed:1 green:0.6 blue:0.15
+                               alpha:ember.opacity] setFill];
+    [[NSBezierPath
+        bezierPathWithOvalInRect:NSMakeRect(
+                                     cx + ember.position.x * scale - radius,
+                                     cy + ember.position.y * scale - radius,
+                                     radius * 2, radius * 3)] fill];
   }
   [NSGraphicsContext restoreGraphicsState];
 }
@@ -242,7 +268,8 @@ void drawFire(double time, bool behind, double cx, double cy, double scale,
   attachFlames(bed, faces, time, remaining);
   attachFlames(wisps, faces, time, remaining);
   drawFlames(std::span<const fireplace::BedFlame>(bed), behind, cx, cy, scale);
-  drawFlames(std::span<const fireplace::RisingWisp>(wisps), behind, cx, cy, scale);
+  drawFlames(std::span<const fireplace::RisingWisp>(wisps), behind, cx, cy,
+             scale);
   drawEmbers(time, behind, cx, cy, scale, remaining, faces);
 }
 
@@ -354,32 +381,54 @@ void drawFire(double time, bool behind, double cx, double cy, double scale,
   // Remaining fuel controls the length of the burning logs.
   const double remaining = combustion.fuel;
   const double fireIntensity = combustion.flame;
-  const double flicker = 0.83 + 0.10 * std::sin(time * 7.3) +
-                         0.07 * std::sin(time * 12.7 + 0.8);
-  const double firelight = std::clamp((fireIntensity + combustion.coal_heat * 0.45) * flicker,
-                                      0.0, 1.0);
+  const double flicker =
+      0.83 + 0.10 * std::sin(time * 7.3) + 0.07 * std::sin(time * 12.7 + 0.8);
+  const double firelight = std::clamp(
+      (fireIntensity + combustion.coal_heat * 0.45) * flicker, 0.0, 1.0);
   const double fireScale = scale;
   const double fireCy = cy;
-  const auto faces = fireplace::log_faces(yaw, pitch, woodPhysics.logs, remaining, firelight);
+  const auto faces =
+      fireplace::log_faces(yaw, pitch, woodPhysics.logs, remaining, firelight);
   // A broad, soft pool of warm light illuminates the background and ground.
   NSGradient *ambientLight = [[NSGradient alloc]
-      initWithStartingColor:[NSColor colorWithCalibratedRed:1 green:0.24 blue:0.035
+      initWithStartingColor:[NSColor colorWithCalibratedRed:1
+                                                      green:0.24
+                                                       blue:0.035
                                                       alpha:firelight * 0.18]
-                endingColor:[NSColor colorWithCalibratedRed:1 green:0.18 blue:0.01 alpha:0]];
-  [ambientLight drawInBezierPath:[NSBezierPath bezierPathWithOvalInRect:
-      NSMakeRect(cx - scale * 2.8, cy - scale * 2.4, scale * 5.6, scale * 4.7)]
-           relativeCenterPosition:NSMakePoint(0, -0.25)];
+                endingColor:[NSColor colorWithCalibratedRed:1
+                                                      green:0.18
+                                                       blue:0.01
+                                                      alpha:0]];
+  [ambientLight
+            drawInBezierPath:[NSBezierPath
+                                 bezierPathWithOvalInRect:NSMakeRect(
+                                                              cx - scale * 2.8,
+                                                              cy - scale * 2.4,
+                                                              scale * 5.6,
+                                                              scale * 4.7)]
+      relativeCenterPosition:NSMakePoint(0, -0.25)];
   // Scattered light lifts the dark surroundings toward a warm pale grey.
   NSGradient *scatteredLight = [[NSGradient alloc]
-      initWithStartingColor:[NSColor colorWithCalibratedRed:1.0 green:0.89 blue:0.72
+      initWithStartingColor:[NSColor colorWithCalibratedRed:1.0
+                                                      green:0.89
+                                                       blue:0.72
                                                       alpha:firelight * 0.30]
-                endingColor:[NSColor colorWithCalibratedRed:1.0 green:0.85 blue:0.65 alpha:0]];
-  [scatteredLight drawInBezierPath:[NSBezierPath bezierPathWithOvalInRect:
-      NSMakeRect(cx - scale * 3.5, cy - scale * 2.8, scale * 7.0, scale * 5.8)]
-             relativeCenterPosition:NSMakePoint(0, -0.2)];
+                endingColor:[NSColor colorWithCalibratedRed:1.0
+                                                      green:0.85
+                                                       blue:0.65
+                                                      alpha:0]];
+  [scatteredLight
+            drawInBezierPath:[NSBezierPath
+                                 bezierPathWithOvalInRect:NSMakeRect(
+                                                              cx - scale * 3.5,
+                                                              cy - scale * 2.8,
+                                                              scale * 7.0,
+                                                              scale * 5.8)]
+      relativeCenterPosition:NSMakePoint(0, -0.2)];
   [NSGraphicsContext saveGraphicsState];
   CGContextSetAlpha(NSGraphicsContext.currentContext.CGContext,
-                    std::max(fireIntensity, combustion.coal_heat * 0.65) * flicker);
+                    std::max(fireIntensity, combustion.coal_heat * 0.65) *
+                        flicker);
   NSGradient *glow = [[NSGradient alloc]
       initWithStartingColor:[NSColor colorWithCalibratedRed:1
                                                       green:0.24
@@ -397,7 +446,8 @@ void drawFire(double time, bool behind, double cx, double cy, double scale,
       relativeCenterPosition:NSMakePoint(0, -0.15)];
   [NSGraphicsContext restoreGraphicsState];
   drawStones(false, cx, cy, scale, firelight, yaw, pitch);
-  drawCoals(time, cx, cy, scale, combustion.coal, combustion.coal_heat, yaw, pitch);
+  drawCoals(time, cx, cy, scale, combustion.coal, combustion.coal_heat, yaw,
+            pitch);
   [NSGraphicsContext saveGraphicsState];
   CGContextSetAlpha(NSGraphicsContext.currentContext.CGContext, fireIntensity);
   [NSGraphicsContext saveGraphicsState];
@@ -408,65 +458,66 @@ void drawFire(double time, bool behind, double cx, double cy, double scale,
   drawFire(time, true, cx, fireCy, fireScale, remaining, faces);
   [NSGraphicsContext restoreGraphicsState];
   if (remaining > 0) {
-  [NSGraphicsContext saveGraphicsState];
-  for (const auto &face : faces) {
-    NSBezierPath *path = [NSBezierPath bezierPath];
-    const auto first = face.points.front();
-    [path moveToPoint:NSMakePoint(cx + first.x * fireScale, fireCy + first.y * fireScale)];
-    for (std::size_t i = 1; i < face.points.size(); ++i) {
-      const auto point = face.points[i];
-      [path
-          lineToPoint:NSMakePoint(cx + point.x * fireScale, fireCy + point.y * fireScale)];
-    }
-    [path closePath];
-    NSColor *color = [NSColor colorWithCalibratedRed:face.color.red
-                                               green:face.color.green
-                                                blue:face.color.blue
-                                               alpha:1.0];
-    [color setFill];
-    [path fill];
-    [color setStroke];
-    [path setLineWidth:0.5];
-    [path stroke];
-
     [NSGraphicsContext saveGraphicsState];
-    [path addClip];
-    std::size_t grainIndex = 0;
-    for (const auto &line : fireplace::wood_grain(face)) {
-      NSBezierPath *grain = [NSBezierPath bezierPath];
-      [grain moveToPoint:NSMakePoint(cx + line[0].x * fireScale,
-                                     fireCy + line[0].y * fireScale)];
-      for (std::size_t i = 1; i < line.size(); ++i) {
-        [grain lineToPoint:NSMakePoint(cx + line[i].x * fireScale,
-                                       fireCy + line[i].y * fireScale)];
+    for (const auto &face : faces) {
+      NSBezierPath *path = [NSBezierPath bezierPath];
+      const auto first = face.points.front();
+      [path moveToPoint:NSMakePoint(cx + first.x * fireScale,
+                                    fireCy + first.y * fireScale)];
+      for (std::size_t i = 1; i < face.points.size(); ++i) {
+        const auto point = face.points[i];
+        [path lineToPoint:NSMakePoint(cx + point.x * fireScale,
+                                      fireCy + point.y * fireScale)];
       }
-      const bool highlight = grainIndex++ % 4 == 0;
-      NSColor *grainColor = highlight ? [NSColor colorWithCalibratedRed:1
-                                                                  green:0.77
-                                                                   blue:0.44
-                                                                  alpha:0.22]
-                                      : [NSColor colorWithCalibratedRed:0.19
-                                                                  green:0.085
-                                                                   blue:0.025
-                                                                  alpha:0.3];
-      [grainColor setStroke];
-      [grain setLineWidth:std::max(0.5, scale * (highlight ? 0.010 : 0.016))];
-      [grain stroke];
+      [path closePath];
+      NSColor *color = [NSColor colorWithCalibratedRed:face.color.red
+                                                 green:face.color.green
+                                                  blue:face.color.blue
+                                                 alpha:1.0];
+      [color setFill];
+      [path fill];
+      [color setStroke];
+      [path setLineWidth:0.5];
+      [path stroke];
+
+      [NSGraphicsContext saveGraphicsState];
+      [path addClip];
+      std::size_t grainIndex = 0;
+      for (const auto &line : fireplace::wood_grain(face)) {
+        NSBezierPath *grain = [NSBezierPath bezierPath];
+        [grain moveToPoint:NSMakePoint(cx + line[0].x * fireScale,
+                                       fireCy + line[0].y * fireScale)];
+        for (std::size_t i = 1; i < line.size(); ++i) {
+          [grain lineToPoint:NSMakePoint(cx + line[i].x * fireScale,
+                                         fireCy + line[i].y * fireScale)];
+        }
+        const bool highlight = grainIndex++ % 4 == 0;
+        NSColor *grainColor = highlight ? [NSColor colorWithCalibratedRed:1
+                                                                    green:0.77
+                                                                     blue:0.44
+                                                                    alpha:0.22]
+                                        : [NSColor colorWithCalibratedRed:0.19
+                                                                    green:0.085
+                                                                     blue:0.025
+                                                                    alpha:0.3];
+        [grainColor setStroke];
+        [grain setLineWidth:std::max(0.5, scale * (highlight ? 0.010 : 0.016))];
+        [grain stroke];
+      }
+      const double woodLight = face.fire_light * 0.24;
+      NSGradient *firelight = [[NSGradient alloc]
+          initWithStartingColor:[NSColor colorWithCalibratedRed:1
+                                                          green:0.32
+                                                           blue:0.035
+                                                          alpha:woodLight]
+                    endingColor:[NSColor colorWithCalibratedRed:1
+                                                          green:0.5
+                                                           blue:0.1
+                                                          alpha:0]];
+      [firelight drawInBezierPath:path angle:90];
+      [NSGraphicsContext restoreGraphicsState];
     }
-    const double woodLight = face.fire_light * 0.24;
-    NSGradient *firelight = [[NSGradient alloc]
-        initWithStartingColor:[NSColor colorWithCalibratedRed:1
-                                                        green:0.32
-                                                         blue:0.035
-                                                        alpha:woodLight]
-                  endingColor:[NSColor colorWithCalibratedRed:1
-                                                        green:0.5
-                                                         blue:0.1
-                                                        alpha:0]];
-    [firelight drawInBezierPath:path angle:90];
     [NSGraphicsContext restoreGraphicsState];
-  }
-  [NSGraphicsContext restoreGraphicsState];
   }
   [NSGraphicsContext saveGraphicsState];
   CGContextSetAlpha(NSGraphicsContext.currentContext.CGContext, fireIntensity);
@@ -486,7 +537,8 @@ void drawFire(double time, bool behind, double cx, double cy, double scale,
 - (void)speedChanged:(NSSlider *)slider {
   const double speed = slider.doubleValue;
   [self.scene setTimeSpeed:speed];
-  self.speedLabel.stringValue = [NSString stringWithFormat:@"Speed: %.1f×", speed];
+  self.speedLabel.stringValue =
+      [NSString stringWithFormat:@"Speed: %.1f×", speed];
 }
 @end
 
@@ -531,8 +583,8 @@ int run_window() {
                                         defer:NO];
     [window setReleasedWhenClosed:NO];
     [window setTitle:@"Fireplace"];
-    FireplaceSceneView *scene = [[FireplaceSceneView alloc]
-        initWithFrame:NSMakeRect(0, 0, 800, 600)];
+    FireplaceSceneView *scene =
+        [[FireplaceSceneView alloc] initWithFrame:NSMakeRect(0, 0, 800, 600)];
     [window setContentView:scene];
     FireplaceControls *controls = [[FireplaceControls alloc] init];
     delegate.controls = controls;
@@ -543,8 +595,11 @@ int run_window() {
     speedLabel.autoresizingMask = NSViewMaxXMargin | NSViewMaxYMargin;
     [scene addSubview:speedLabel];
     controls.speedLabel = speedLabel;
-    NSSlider *speedSlider = [NSSlider sliderWithValue:1.0 minValue:0.0
-        maxValue:32.0 target:controls action:@selector(speedChanged:)];
+    NSSlider *speedSlider = [NSSlider sliderWithValue:1.0
+                                             minValue:0.0
+                                             maxValue:32.0
+                                               target:controls
+                                               action:@selector(speedChanged:)];
     speedSlider.frame = NSMakeRect(20, 20, 180, 20);
     speedSlider.autoresizingMask = NSViewMaxXMargin | NSViewMaxYMargin;
     [scene addSubview:speedSlider];

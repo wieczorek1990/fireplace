@@ -21,7 +21,8 @@ double wind_distance(double time, double duration) {
   const double start = time - duration;
   return 0.32 * duration +
          0.35 / 0.34 * (std::cos(start * 0.34) - std::cos(time * 0.34)) +
-         0.18 / 0.91 * (std::cos(start * 0.91 + 0.7) - std::cos(time * 0.91 + 0.7));
+         0.18 / 0.91 *
+             (std::cos(start * 0.91 + 0.7) - std::cos(time * 0.91 + 0.7));
 }
 } // namespace
 
@@ -62,7 +63,8 @@ std::array<RisingWisp, 172> rising_wisps(double time) {
         {0.96 * std::cos(angle), -0.83 + 0.30 * std::sin(angle)},
         (0.055 + noise(seed + 4) * 0.065) * (1 - age * 0.75),
         (0.24 + variation * 0.42) * (1 - age * 0.5),
-        0.10 * std::sin(time * 4 + seed) + sway + wind(time) * (0.2 + age * 0.25),
+        0.10 * std::sin(time * 4 + seed) + sway +
+            wind(time) * (0.2 + age * 0.25),
         std::sin(age * 3.14159265359) * (1 - age) * 0.65,
         std::sin(angle) > 0};
   }
@@ -76,14 +78,14 @@ std::array<Ember, 45> fire_embers(double time) {
     const double clock = time * speed + noise(seed);
     const double age = clock - std::floor(clock);
     const double angle = noise(seed + 21) * 6.28318530718;
-    embers[i] = {
-        {0.9 * std::cos(angle) + age * 0.25 * std::sin(time * 1.5 + seed) +
-             wind_distance(time, age / speed) * 0.65,
-         -0.8 + 0.3 * std::sin(angle) + age * 2.8},
-        {0.9 * std::cos(angle), -0.8 + 0.3 * std::sin(angle)},
-        std::sin(age * 3.14159265359) * (1 - age),
-        0.003 + noise(seed + 2) * 0.005,
-        std::sin(angle) > 0};
+    embers[i] = {{0.9 * std::cos(angle) +
+                      age * 0.25 * std::sin(time * 1.5 + seed) +
+                      wind_distance(time, age / speed) * 0.65,
+                  -0.8 + 0.3 * std::sin(angle) + age * 2.8},
+                 {0.9 * std::cos(angle), -0.8 + 0.3 * std::sin(angle)},
+                 std::sin(age * 3.14159265359) * (1 - age),
+                 0.003 + noise(seed + 2) * 0.005,
+                 std::sin(angle) > 0};
   }
   return embers;
 }
@@ -94,12 +96,12 @@ std::array<SmokePuff, 28> fire_smoke(double time) {
     const double speed = 0.12 + (i % 5) * 0.014;
     const double clock = time * speed + i * 0.618033989;
     const double age = clock - std::floor(clock);
-    puffs[i] = {
-        {0.45 * std::sin(i * 2.4) + age * 0.24 * std::sin(time * 0.6 + i) +
-             wind_distance(time, age / speed) * 0.7,
-         -0.15 + age * 2.7},
-        0.08 + age * 0.30,
-        0.055 * std::sin(age * 3.14159265359)};
+    puffs[i] = {{0.45 * std::sin(i * 2.4) +
+                     age * 0.24 * std::sin(time * 0.6 + i) +
+                     wind_distance(time, age / speed) * 0.7,
+                 -0.15 + age * 2.7},
+                0.08 + age * 0.30,
+                0.055 * std::sin(age * 3.14159265359)};
   }
   return puffs;
 }

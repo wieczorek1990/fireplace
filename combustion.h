@@ -1,7 +1,8 @@
 #pragma once
 
 namespace fireplace {
-// Relative quantities for a small, ventilated fire; not physical concentrations.
+// Relative quantities for a small, ventilated fire; not physical
+// concentrations.
 struct Combustion {
   double fuel = 1.0;
   double oxygen = 1.0;

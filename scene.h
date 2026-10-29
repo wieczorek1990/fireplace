@@ -1,8 +1,8 @@
 #pragma once
 
-#include <array>
-#include "wood_physics.h"
 #include "light_shader.h"
+#include "wood_physics.h"
+#include <array>
 
 namespace fireplace {
 
