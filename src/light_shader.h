@@ -19,11 +19,3 @@ ShadedLight shade_wood(Color albedo, LightVector position, LightVector normal,
                        LightVector view_normal, double fuel,
                        double fire_intensity);
 } // namespace fireplace
-
-namespace fireplace {
-struct LightInput {
-  float px, py, pz, nx, ny, nz, vx, vy, vz, fuel, intensity;
-};
-void shade_wood_batch(const LightInput *inputs, ShadedLight *outputs,
-                      unsigned count);
-} // namespace fireplace
